@@ -1,63 +1,77 @@
 const express = require('express')
-const data = require('../sample-data/data')
-const uuid = require('uuid')
+const Character = require('../db/schema')
 
 const router = express.Router()
 
 //Get full list of data
-router.get('/', (req, res) => {
-    res.json(data)
+router.get('/', async (req, res) => {
+    try {
+        const characters = await Character.find()
+        res.json(characters)
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message })
+    }
 })
 
 //Get single data by id
-router.get('/:id', (req, res) => {
-    const match = data.find(item => item.id === parseInt(req.params.id))
-    if (match) {
-        res.json(data.filter(item => item.id === parseInt(req.params.id)))
-    } else {
-        res.status(400).json({ msg: 'Character not found.' })
+router.get('/:id', async (req, res) => {
+    try {
+        const match = await Character.findById(req.params.id)
+        if (match === null) {
+            res.status(404).json({ message: 'Error 404: Character not found.' })
+        } else {
+            res.json(match)
+        }
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message })
     }
 })
 
 //Create new data and add to list
-router.post('/', (req, res) => {
-    const newData = {
-        id: uuid.v4(),
-        name: req.body.name,
-        desc: req.body.desc,
-        status: req.body.status,
-        // ...req.body
+router.post('/', async (req, res) => {
+    const character = new Character({
+        ...req.body
+    })
+    try {
+        const newCharacter = await character.save()
+        res.status(201).json(newCharacter)
     }
-    data.push(newData)
-    res.json(data)
-    // res.redirect('/')
+    catch (error) {
+        res.status(400).json({ message: error.message })
+    }
 })
 
 //Update data by id
-router.put('/:id', (req, res) => {
-    const match = data.find(item => item.id === parseInt(req.params.id))
+router.put('/:id', async (req, res) => {
+    const match = await Character.findById(req.params.id)
     if (match) {
-        data.forEach(item => {
-            if (item.id === parseInt(req.params.id)) {
-                item.name = req.body.name ? req.body.name : item.name
-                item.desc = req.body.desc ? req.body.desc : item.desc
-                item.status = req.body.status ? req.body.status : item.status
-
-                res.json(item)
-            }
-        })
-    } else {
-        res.status(400).json({ msg: 'Character not found.' })
+        match.name = req.body.name ? req.body.name : match.name
+        match.desc = req.body.desc ? req.body.desc : match.desc
+        match.status = req.body.status ? req.body.status : match.status
+    }
+    else {
+        res.status(404).json({ msg: 'Character not found.' })
+    }
+    try {
+        const updatedCharacter = await match.save()
+        res.json(updatedCharacter)
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message })
     }
 })
 
 //Delete from a list of data
-router.delete('/:id', (req, res) => {
-    const match = data.find(item => item.id === parseInt(req.params.id))
-    if (match) {
-        res.json(data.filter(item => item.id !== parseInt(req.params.id)))
-    } else {
-        res.status(400).json({ msg: 'Character not found.' })
+router.delete('/:id', async (req, res) => {
+    try {
+        const match = await Character.findById(req.params.id)
+        match.remove()
+        res.json({ message: 'Character deleted' })
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message })
     }
 })
 

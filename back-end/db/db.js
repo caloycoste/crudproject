@@ -1,16 +1,7 @@
-const mysql = require('mysql')
+const mongoose = require('mongoose')
+const dbURI = 'mongodb+srv://caloy_123:caloy_123@crudproject.y9qfx.mongodb.net/mcu-db?retryWrites=true&w=majority'
 
-const connection = mysql.createConnection({
-    host: 'localhost',
-    user:'root',
-    password:'',
-    database:'mcudb',
-})
+mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
 
-connection.connect((err) => {
-    if (err) throw err
-    console.log('Connected to database.')
-})
-
-module.exports = connection
+module.exports = mongoose
 
